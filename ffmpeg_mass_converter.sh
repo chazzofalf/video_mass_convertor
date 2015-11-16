@@ -32,7 +32,7 @@ export input
 export output
 export donefldr
 export convconf
-export dlfoldr
+export dlfldr
 run_generic() #NECESSARY
 {
 	local inputflags
@@ -110,7 +110,7 @@ read_conv_conf_line_by_line() #NECESSARY
 #		return 0
                        	if [ -z "$convconf_line" ]
 			then
-				if [ -z $foldersection ]
+				if [ -z "$foldersection" ]
 				then
 					echo "Ignoring blank folder section"
 				else
