@@ -45,6 +45,7 @@ run_generic() #NECESSARY
 	inputFile="$3"
 	outputFile="$4"
 	cmd="ffmpeg $inputflags -i \"$inputFile\" $outputflags \"$outputFile\""
+	echo "$cmd"
 	eval "$cmd"
 #	if [ ! -d "$input"/"$donefldr" ]
 #	then
@@ -82,7 +83,10 @@ load_main_configuration() #NECESSARY
 					key="`echo $conf_line | cut -d\= -f 1`"
 					value="`echo $conf_line | cut -d\= -f 2`"
 					cmd="$key=\"$value\""
-					echo "$cmd"
+					if [ ! -z "$key" ]
+					then
+                                            echo "$cmd"
+                                        fi
 #					eval "$cmd"
 				else
 					return 1
@@ -102,7 +106,7 @@ read_conv_conf_line_by_line() #NECESSARY
 	local ext
 	local key
 	local value
-	local cmd
+	local cmd	
 	cat "$convconf" | while read convconf_line
 	do
 		convconf_line_length=${#convconf_line}
@@ -125,12 +129,20 @@ read_conv_conf_line_by_line() #NECESSARY
 						for f in "$input"/"$foldersection"/*
 						do
 							if [ -f "$f" ]
-							then
-								run_generic "$inputflags" "$outputflags" "$f" "$output"/"`echo $f | rev | cut -d/ -f 1 | cut -d. -f 2- | rev`"."$ext"
+							then                                                                     
+                                                            run_generic "$inputflags" "$outputflags" "$f" "$output"/"`echo $f | rev | cut -d/ -f 1 | cut -d. -f 2- | rev`"."$ext"                                                            
+                                                            key=""
+                                                            value=""
+                                                            foldersection=""
+                                                            ext=""
+                                                            inputflags=""
+                                                            outputflags=""
+                                                            cmd=""
 							fi
-						done
+						done						
+						
 					fi
-				fi
+				fi				
 			elif [[ "${convconf_line:0:1}" == "[" && "${convconf_line:$((convconf_line_length-1)):1}" == "]" ]]
                         then
                                 foldersection="${convconf_line:1:$((convconf_line_length-2))}"
@@ -140,22 +152,24 @@ read_conv_conf_line_by_line() #NECESSARY
 				key="`echo $convconf_line | cut -d\= -f 1`"
 				value="`echo $convconf_line | cut -d\= -f 2`"
 				cmd="$key=\"$value\""
-#				echo "$cmd"
-				eval "$cmd"
+				#echo "$cmd"
+                                if [ ! -z "$key" ]
+                                then                                
+                                    eval "$cmd" 2> /dev/null
+                                fi
 			fi
 	done
 }
 main_piped() #NECESSARY
 {
-	echo a
-	main 2> /dev/stdout > ~/conv_damon_`date +%Y%m%d_%H%M%S`.log
+	main 2> /dev/stdout > conv_damon_`date +%Y%m%d_%H%M%S`.log
 }
 main() #NECESSARY
 {
-	echo b
+        
 #	load_main_configuration
 #	return 0
-	cmd="`load_main_configuration`"
+	cmd="`load_main_configuration`"	
 	eval "$cmd"
 
 	if [ ! -d "$input"/"$dlfldr" ]
@@ -169,8 +183,9 @@ main() #NECESSARY
 	then
 		while true
 		do
+                        
 			read_conv_conf_line_by_line
-			sleep 60
+			sleep 1
 		done
 	fi
 
@@ -233,25 +248,98 @@ generateConversionConfiguration() #NECESSARY
         then
             rm "$convConfFile"
         fi
+    
+        while [ "$continueAllowed" == "y" ]
+        do        
+            echo -n "What is the name of the conversion folder?: "
+            read convfldrname
+            echo -n "Specify the input arguments for ffmpeg for files in this folder (Do not specify the -i for this will be done automatically during conversion): "
+            read ffmpegInArgs
+            echo -n "Specify the output arguments for ffmpeg for file in this folder (Do not specify the output file for this is also done automatically during conversion): "
+            read ffmpegOutArgs
+            echo -n "Specify the file extension for ffmpeg to use for this file. (Example: MPEG4 files use mp4,m4v, or m4a depending on content): "
+            read fileExt
+            echo "[$convfldrname]" >> "$convConfFile"
+            echo "inputflags=$ffmpegInArgs" >> "$convConfFile"
+            echo "outputflags=$ffmpegOutArgs" >> "$convConfFile"
+            echo "ext=$fileExt" >> "$convConfFile"
+            echo >> "$convConfFile"
+            echo -n "Do you want to specify another conversion folder option? [y/N]: "
+            read continueAllowed
+        done
     fi
-    while [ "$continueAllowed" == "y" ]
-    do        
-        echo -n "What is the name of the conversion folder?: "
-        read convfldrname
-        echo -n "Specify the input arguments for ffmpeg for files in this folder (Do not specify the -i for this will be done automatically during conversion): "
-        read ffmpegInArgs
-        echo -n "Specify the output arguments for ffmpeg for file in this folder (Do not specify the output file for this is also done automatically during conversion): "
-        read ffmpegOutArgs
-        echo -n "Specify the file extension for ffmpeg to use for this file. (Example: MPEG4 files use mp4,m4v, or m4a depending on content): "
-        read fileExt
-        echo "[$convfldrname]" >> "$convConfFile"
-        echo "inputFlags=$ffmpegInArgs" >> "$convConfFile"
-        echo "outputFlags=$ffmpegOutArgs" >> "$convConfFile"
-        echo "ext=$fileExt" >> "$convConfFile"
-        echo >> "$convConfFile"
-        echo -n "Do you want to specify another conversion folder option? [y/N]: "
+}
+generateMainConfiguration() #NECESSARY
+{
+    local inputBasePath
+    local outputBasePath
+    local convConfPath
+    local dlfldrname
+    local confFile
+    local continueAllowed
+    continueAllowed="y"
+    echo -n "Where do you want to put the main configuration file?: "
+    read confFile
+    if [ -f  "$confFile" ]
+    then
+        echo "$confFile alread exists. Continuing will force it to be removed."
+        echo -n "Do you want to continue? [y/N]: "
         read continueAllowed
-    done
+        if [ -z "$continueAllowed" ]
+        then
+            continueAllowed="n"
+        fi            
+    fi
+    if [ "$continueAllowed" == "y" ]
+    then
+        if [ -f "$confFile" ]
+        then
+            rm "$confFile"
+        fi
+        echo -n "Where is general location for videos that are going to be converted?: "
+        read inputBasePath
+        echo -n "Where are the converted videos going to go?: "
+        read outputBasePath
+        echo -n "Where is the conversion configuation file located?: "
+        read convConfPath
+        echo -n "What is the name of the staging/download directory?: "
+        read dlfldrname
+        echo "[Configuration]" > "$confFile"
+        echo "input=$inputBasePath" >> "$confFile"
+        echo "output=$outputBasePath" >> "$confFile"
+        echo "convconf=$convConfPath" >> "$confFile"
+        echo "dlfldr=$dlfldrname" >> "$confFile"
+        echo >> "$confFile"
+    fi
+}
+generateWrapper() #NECESSARY
+{
+    local wrapperPath
+    local confPath
+    local fmcPath
+    local continueAllowed
+    continueAllowed="y"
+    echo -n "Where will the wrapper be placed?: "
+    read wrapperPath
+    if [ -f "$wrapperPath" ]
+    then
+        echo -n "$wrapperPath already exists. Do you want to overwrite? [y/N]: "
+        read continueAllowed
+        if [ -z "$continueAllowed" ]
+        then
+            continueAllowed="n"
+        fi   
+    fi
+    if [ "$continueAllowed" == "y" ]
+    then
+        echo -n "Where is the configuration file?: "
+        read confPath
+        fmcPath="$0"
+        echo "#!/bin/bash" > "$wrapperPath"
+        echo "conv_daemon_conf=\"$confPath\" \"$fmcPath\"" >> "$wrapperPath"
+        chmod +x "$wrapperPath"
+        
+    fi
 }
 export -f run_generic
 export -f main
@@ -271,5 +359,11 @@ then
         elif [ "$1" == "--genconv" ]
         then
             generateConversionConfiguration
+        elif [ "$1" == "--genconfig" ]
+        then
+            generateMainConfiguration
+        elif [ "$1" == "--genwrapper" ]
+        then
+            generateWrapper
 	fi
 fi
