@@ -211,19 +211,47 @@ generateConversionConfiguration() #NECESSARY
     local convfldrname
     local ffmpegInArgs
     local ffmpegOutArgs
+    local fileExt
     local convConfFile
+    local continueAllowed
+    continueAllowed="y"
     echo -n "Where do you want to put the conversion configuration file?: "
     read convConfFile
     if [ -f "$convConfFile" ]
     then
         echo "$convConfFile already exists. Continuing will force it to be removed."
         echo "Do you want to continue? [y/N]: "
+	read continueAllowed
+	if [ -z "$continueAllowed" ]
+	then
+            continueAllowed="n"
+	fi
     fi
-    echo -n "What is the name of the conversion folder?: "
-    read convfldrname
-    echo -n "Specify the input arguments for ffmpeg for files in this folder (Do not specify the -i for this will be done automatically during conversion): "
-    read ffmpegInArgs
-    echo -n "Specify the output arguments for ffmpeg for file in this folder (Do not specify the output file for this is also done automatically during conversion): "
+    if [ "$continueAllowed" == "y" ]
+    then
+        if [ -f "$convConfFile" ]
+        then
+            rm "$convConfFile"
+        fi
+    fi
+    while [ "$continueAllowed" == "y" ]
+    do        
+        echo -n "What is the name of the conversion folder?: "
+        read convfldrname
+        echo -n "Specify the input arguments for ffmpeg for files in this folder (Do not specify the -i for this will be done automatically during conversion): "
+        read ffmpegInArgs
+        echo -n "Specify the output arguments for ffmpeg for file in this folder (Do not specify the output file for this is also done automatically during conversion): "
+        read ffmpegOutArgs
+        echo -n "Specify the file extension for ffmpeg to use for this file. (Example: MPEG4 files use mp4,m4v, or m4a depending on content): "
+        read fileExt
+        echo "[$convfldrname]" >> "$convConfFile"
+        echo "inputFlags=$ffmpegInArgs" >> "$convConfFile"
+        echo "outputFlags=$ffmpegOutArgs" >> "$convConfFile"
+        echo "ext=$fileExt" >> "$convConfFile"
+        echo >> "$convConfFile"
+        echo -n "Do you want to specify another conversion folder option? [y/N]: "
+        read continueAllowed
+    done
 }
 export -f run_generic
 export -f main
@@ -239,6 +267,9 @@ elif [ $argc -eq 1 ]
 then
 	if [ "$1" == "--help" ]
 	then
-		helpMe
+            helpMe
+        elif [ "$1" == "--genconv" ]
+        then
+            generateConversionConfiguration
 	fi
 fi
