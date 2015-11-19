@@ -131,13 +131,6 @@ read_conv_conf_line_by_line() #NECESSARY
 							if [ -f "$f" ]
 							then                                                                     
                                                             run_generic "$inputflags" "$outputflags" "$f" "$output"/"`echo $f | rev | cut -d/ -f 1 | cut -d. -f 2- | rev`"."$ext"                                                            
-                                                            key=""
-                                                            value=""
-                                                            foldersection=""
-                                                            ext=""
-                                                            inputflags=""
-                                                            outputflags=""
-                                                            cmd=""
 							fi
 						done						
 						
