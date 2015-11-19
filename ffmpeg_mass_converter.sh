@@ -87,7 +87,7 @@ load_main_configuration() #NECESSARY
 					then
                                             echo "$cmd"
                                         fi
-#					eval "$cmd"
+					eval "$cmd"
 				else
 					return 1
 				fi
@@ -146,7 +146,7 @@ read_conv_conf_line_by_line() #NECESSARY
 			elif [[ "${convconf_line:0:1}" == "[" && "${convconf_line:$((convconf_line_length-1)):1}" == "]" ]]
                         then
                                 foldersection="${convconf_line:1:$((convconf_line_length-2))}"
-				#echo "folder section : $foldersection"
+				echo "folder section : $foldersection"
 				#return 0
 			else
 				key="`echo $convconf_line | cut -d\= -f 1`"
@@ -155,14 +155,15 @@ read_conv_conf_line_by_line() #NECESSARY
 				#echo "$cmd"
                                 if [ ! -z "$key" ]
                                 then                                
-                                    eval "$cmd" 2> /dev/null
+                                    eval "$cmd" 2> /dev/stdout
                                 fi
 			fi
 	done
 }
 main_piped() #NECESSARY
 {
-	main 2> /dev/stdout > conv_damon_`date +%Y%m%d_%H%M%S`.log
+	echo test > out
+	main 2> /dev/stdout | tee conv_damon_`date +%Y%m%d_%H%M%S`.log
 }
 main() #NECESSARY
 {
@@ -192,7 +193,7 @@ main() #NECESSARY
 }
 daemon() #NECESSARY
 {
-	screen -dmS "conv_daemon_$RANDOM" bash -c "main_piped 2> /dev/stdout >> o.log"
+	screen -dmS "conv_daemon_$RANDOM" bash -c "main_piped"
 }
 helpMe() #NECESSARY
 {
