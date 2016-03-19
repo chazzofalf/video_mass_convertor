@@ -33,6 +33,7 @@ export output
 export donefldr
 export convconf
 export dlfldr
+
 run_generic() #NECESSARY
 {
 	local inputflags
@@ -126,11 +127,15 @@ read_conv_conf_line_by_line() #NECESSARY
 						then
 							mkdir "$input"/"$foldersection"
 						fi
+						if [[ ! -d "$output"/"$foldersection" ]]
+						then
+							mkdir "$output"/"$foldersection"
+						fi
 						for f in "$input"/"$foldersection"/*
 						do
 							if [ -f "$f" ]
 							then                                                                     
-                                                            run_generic "$inputflags" "$outputflags" "$f" "$output"/"`echo $f | rev | cut -d/ -f 1 | cut -d. -f 2- | rev`"."$ext"                                                            
+                                                            run_generic "$inputflags" "$outputflags" "$f" "$output"/"$foldersection"/"`echo $f | rev | cut -d/ -f 1 | cut -d. -f 2- | rev`"."$ext"                                                            
 							fi
 						done						
 						
