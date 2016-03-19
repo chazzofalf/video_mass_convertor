@@ -81,7 +81,7 @@ run_generic() #NECESSARY
 	outputflags="$2"
 	inputFile="$3"
 	outputFile="$4"
-	cmd="ffmpeg $inputflags -i \"$inputFile\" $outputflags \"$outputFile\""
+	cmd="ffmpeg $inputflags -i \"$inputFile\" $outputflags -n \"$outputFile\""
 	echo "$cmd"
 	eval "$cmd"
 #	if [ ! -d "$input"/"$donefldr" ]
