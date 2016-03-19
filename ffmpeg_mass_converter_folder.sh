@@ -33,7 +33,43 @@ export output
 export donefldr
 export convconf
 export dlfldr
-
+run_generic_recursive_step()
+{
+	local inputflags="$1"
+	local outputflag="$2"
+	local currentItem="$3"
+	local outlocation="$4"
+	local ext="$5"
+	if [ ! -d "$outlocation" ]
+	then
+		mkdir "$outlocation"
+	fi
+	for f in "$currentItem"/*
+	do
+		if [ -d "$f" ]
+		then
+			run_generic_recursive_step "$inputflags" "$outputflags" "$f" "$outlocation"/"`echo $f | rev | cut -d/ -f 1 |  rev`" "$ext"
+		else
+			run_generic "$inputflags" "$outputflags" "$f" "$outlocation"/"`echo $f | rev | cut -d/ -f 1 | cut -d. -f 2 | rev`"."$ext"
+		fi
+	done
+}
+run_generic_recursive()
+{
+	# run_generic_recursive "$inputflags" "$outputflags" "$f" "$output"/"$foldersection"/"`echo $f | rev | cut -d/ -f 1 | rev`"
+	local inputflags="$1"
+	local outputflag="$2"
+	local currentItem="$3"
+	local outlocation="$4"
+	local ext="$5"
+	run_generic_recursive_step "$inputflags" "$outputflags" "$currentItem" "$outlocation" "$ext"
+	if [[ -d "$currentItem" && ! -L "$currentItem" ]]
+	then
+		rm -r "$currentItem"
+	else
+		rm "$currentItem"
+	fi
+}
 run_generic() #NECESSARY
 {
 	local inputflags
@@ -136,6 +172,9 @@ read_conv_conf_line_by_line() #NECESSARY
 							if [ -f "$f" ]
 							then                                                                     
                                                             run_generic "$inputflags" "$outputflags" "$f" "$output"/"$foldersection"/"`echo $f | rev | cut -d/ -f 1 | cut -d. -f 2- | rev`"."$ext"                                                            
+							elif [ -d "$f" ]
+							then
+								run_generic_recursive "$inputflags" "$outputflags" "$f" "$output"/"$foldersection"/"`echo $f | rev | cut -d/ -f 1 | rev`" "$ext"
 							fi
 						done						
 						
@@ -340,6 +379,8 @@ generateWrapper() #NECESSARY
         
     fi
 }
+export -f run_generic_recursive_step
+export -f run_generic_recursive
 export -f run_generic
 export -f main
 export -f daemon
