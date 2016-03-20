@@ -50,7 +50,7 @@ run_generic_recursive_step()
 		then
 			run_generic_recursive_step "$inputflags" "$outputflags" "$f" "$outlocation"/"`echo $f | rev | cut -d/ -f 1 |  rev`" "$ext"
 		else
-			run_generic "$inputflags" "$outputflags" "$f" "$outlocation"/"`echo $f | rev | cut -d/ -f 1 | cut -d. -f 2 | rev`"."$ext"
+			run_generic_no_delete "$inputflags" "$outputflags" "$f" "$outlocation"/"`echo $f | rev | cut -d/ -f 1 | cut -d. -f 2 | rev`"."$ext"
 		fi
 	done
 }
@@ -69,6 +69,27 @@ run_generic_recursive()
 	else
 		rm "$currentItem"
 	fi
+}
+run_generic_no_delete() #NECESSARY
+{
+	local inputflags
+	local outputflags
+	local inputFile
+	local outputFile
+	local cmd
+	inputflags="$1"
+	outputflags="$2"
+	inputFile="$3"
+	outputFile="$4"
+	cmd="ffmpeg $inputflags -i \"$inputFile\" $outputflags -n \"$outputFile\""
+	echo "$cmd"
+	eval "$cmd"
+#	if [ ! -d "$input"/"$donefldr" ]
+#	then
+#		mkdir "$input"/"$donefldr"
+#	fi
+#	mv "$inputFile" "$input"/"$donefldr"/
+#	rm "$inputFile"
 }
 run_generic() #NECESSARY
 {
@@ -381,12 +402,14 @@ generateWrapper() #NECESSARY
 }
 export -f run_generic_recursive_step
 export -f run_generic_recursive
+export -f run_generic_no_delete
 export -f run_generic
 export -f main
 export -f daemon
 export -f load_main_configuration
 export -f read_conv_conf_line_by_line
 export -f main_piped
+
 argc=$#
 if [ $argc -eq 0 ]
 then
