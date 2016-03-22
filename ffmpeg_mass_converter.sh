@@ -50,7 +50,7 @@ run_generic_recursive_step()
 		then
 			run_generic_recursive_step "$inputflags" "$outputflags" "$f" "$outlocation"/"`echo $f | rev | cut -d/ -f 1 |  rev`" "$ext"
 		else
-			run_generic_no_delete "$inputflags" "$outputflags" "$f" "$outlocation"/"`echo $f | rev | cut -d/ -f 1 | cut -d. -f 2 | rev`"."$ext"
+			run_generic_no_delete "$inputflags" "$outputflags" "$f" "$outlocation"/"`echo $f | rev | cut -d/ -f 1 | cut -d. -f 2- | rev`"."$ext"
 		fi
 	done
 }
